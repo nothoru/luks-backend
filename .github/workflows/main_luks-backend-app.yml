@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: read # This is required for actions/checkout
 
     steps:
       - uses: actions/checkout@v4
@@ -20,28 +20,50 @@ jobs:
         with:
           python-version: "3.12"
 
-      # We don't need to create a venv or install dependencies here anymore.
-      # Azure will do this. We just need to upload the code.
+      - name: Create and start virtual environment
+        run: |
+          python -m venv venv
+
+      - name: Install dependencies
+        run: |
+          source venv/bin/activate
+          pip install -r requirements.txt  # This will install all dependencies listed in your requirements file
+
+      - name: Run database migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+        run: |
+          source venv/bin/activate
+          python manage.py migrate --noinput
+
+      - name: Collect static files
+        env:
+          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+        run: |
+          source venv/bin/activate
+          python manage.py collectstatic --noinput
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
         with:
           name: python-app
-          path: . # Upload the entire repository content
+          path: |
+            . 
+            !venv/
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
     permissions:
-      id-token: write
-      contents: read
+      id-token: write # This is required for requesting the JWT
+      contents: read # This is required for actions/checkout
 
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: python-app
-
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -55,12 +77,3 @@ jobs:
         with:
           app-name: "luks-backend-app"
           slot-name: "Production"
-          package: . # This tells the deploy action to use the downloaded artifact
-
-      # --- THIS IS THE NEW, CRUCIAL STEP ---
-      - name: Run post-deployment commands
-        uses: azure/CLI@v1
-        with:
-          inlineScript: |
-            az webapp config appsettings set --resource-group LuksRestaurant-RG --name luks-backend-app --settings SCM_DO_BUILD_DURING_DEPLOYMENT=true
-            az webapp restart --name luks-backend-app --resource-group LuksRestaurant-RG
