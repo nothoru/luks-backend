@@ -1,4 +1,4 @@
-name: Build and deploy Python app to Azure Web App
+name: Deploy Python app to Azure Web App
 
 on:
   push:
@@ -7,39 +7,14 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
-    env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
-      AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
-      AZURE_ACCOUNT_NAME: ${{ secrets.AZURE_ACCOUNT_NAME }}
-      DEBUG: "False"
-      ALLOWED_HOSTS: "luks-backend-app.azurewebsites.net"
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Python version
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install dependencies into a local directory
-        run: |
-          pip install --target="./.python_packages/lib/site-packages" -r requirements.txt
-
-      - name: Run database migrations
-        run: |
-          export PYTHONPATH="./.python_packages/lib/site-packages"
-          python manage.py migrate --noinput
-
-      # Create a zip file that includes our code AND the packages
-      - name: Archive production artifacts
-        run: zip -r release.zip . -x ".git/*" ".github/*"
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -52,4 +27,4 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: "luks-backend-app"
-          package: release.zip # <-- THIS IS THE CRITICAL CHANGE
+          slot-name: "Production"
