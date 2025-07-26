@@ -18,8 +18,6 @@ jobs:
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       DEBUG: "False"
       ALLOWED_HOSTS: "luks-backend-app.azurewebsites.net"
-      # Add other secrets your settings.py might need during build
-      # e.g., AZURE_STORAGE_CONNECTION_STRING if collectstatic needs it
       AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
       AZURE_ACCOUNT_NAME: ${{ secrets.AZURE_ACCOUNT_NAME }}
 
@@ -31,29 +29,24 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Create and start virtual environment
-        run: |
-          python -m venv venv
-          source venv/bin/activate
-          pip install -r requirements.txt
+      # We will let Azure handle the venv and pip install.
+      # We only install dependencies here to run the manage.py commands.
+      - name: Install dependencies for build steps
+        run: pip install -r requirements.txt
 
+      # The env variables are available to all steps below
       - name: Run database migrations
-        run: |
-          source venv/bin/activate
-          python manage.py migrate --noinput
+        run: python manage.py migrate --noinput
 
       - name: Collect static files
-        run: |
-          source venv/bin/activate
-          python manage.py collectstatic --noinput
+        run: python manage.py collectstatic --noinput
 
+      # We don't need to upload the venv anymore.
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
         with:
           name: python-app
-          path: |
-            . 
-            !venv/
+          path: .
 
   deploy:
     runs-on: ubuntu-latest
