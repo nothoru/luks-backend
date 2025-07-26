@@ -37,7 +37,10 @@ jobs:
           export PYTHONPATH="./.python_packages/lib/site-packages"
           python manage.py migrate --noinput
 
-      # --- THIS IS THE MISSING STEP ---
+      # Create a zip file that includes our code AND the packages
+      - name: Archive production artifacts
+        run: zip -r release.zip . -x ".git/*" ".github/*"
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -49,4 +52,4 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: "luks-backend-app"
-          # This action automatically zips the current directory and deploys it.
+          package: release.zip # <-- THIS IS THE CRITICAL CHANGE
