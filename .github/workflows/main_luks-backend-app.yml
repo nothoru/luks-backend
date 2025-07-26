@@ -1,4 +1,4 @@
-name: Deploy Python app to Azure Web App
+name: Build and deploy Python app to Azure Web App
 
 on:
   push:
@@ -7,24 +7,39 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+      AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+      AZURE_ACCOUNT_NAME: ${{ secrets.AZURE_ACCOUNT_NAME }}
+      DEBUG: "False"
+      ALLOWED_HOSTS: "luks-backend-app.azurewebsites.net"
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Login to Azure
-        uses: azure/login@v2
+      - name: Set up Python version
+        uses: actions/setup-python@v5
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_ACE4B85073734234B35000425EFB777F }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_9E90A18BAEBF4DEB9AE1A77761C2DAB5 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_2804B47199C346C8BFF67BD2E3027012 }}
+          python-version: "3.12"
+
+      - name: Install dependencies into a local directory
+        run: |
+          pip install --target="./.python_packages/lib/site-packages" -r requirements.txt
+
+      - name: Run database migrations
+        run: |
+          # Temporarily add packages to python path to run commands
+          export PYTHONPATH="./.python_packages/lib/site-packages"
+          python manage.py migrate --noinput
 
       - name: "Deploy to Azure Web App"
         uses: azure/webapps-deploy@v3
         with:
           app-name: "luks-backend-app"
-          slot-name: "Production"
+          # This action will zip up the code and the .python_packages folder
