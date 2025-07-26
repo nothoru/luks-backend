@@ -34,12 +34,19 @@ jobs:
 
       - name: Run database migrations
         run: |
-          # Temporarily add packages to python path to run commands
           export PYTHONPATH="./.python_packages/lib/site-packages"
           python manage.py migrate --noinput
+
+      # --- THIS IS THE MISSING STEP ---
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_ACE4B85073734234B35000425EFB777F }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_9E90A18BAEBF4DEB9AE1A77761C2DAB5 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_2804B47199C346C8BFF67BD2E3027012 }}
 
       - name: "Deploy to Azure Web App"
         uses: azure/webapps-deploy@v3
         with:
           app-name: "luks-backend-app"
-          # This action will zip up the code and the .python_packages folder
+          # This action automatically zips the current directory and deploys it.
