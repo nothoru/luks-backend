@@ -98,17 +98,19 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'default', # Placeholder
+if 'DATABASE_URL' in os.environ:
+    # --- PRODUCTION SETTINGS (Azure) ---
+    # Azure provides the DATABASE_URL environment variable
+    # with the connection string to your managed PostgreSQL instance.
+    DATABASES = {
+        'default': dj_database_url.config(
+            conn_max_age=600,
+            ssl_require=True # Azure PostgreSQL requires SSL
+        )
     }
-}
-
-db_from_env = dj_database_url.config(conn_max_age=600, ssl_require=True)
-DATABASES['default'].update(db_from_env)
-
-if not db_from_env:
+else:
+    # --- DEVELOPMENT SETTINGS (Local .env file) ---
+    # Fallback to individual variables for local development
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -119,7 +121,6 @@ if not db_from_env:
             'PORT': os.getenv('DB_PORT'),
         }
     }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
