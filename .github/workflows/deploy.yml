@@ -19,7 +19,7 @@ jobs:
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
 
-      - name: "Build and push Docker image"
+      - name: "Build and push Docker image"~~
         uses: docker/build-push-action@v5 # Use latest build-push action
         with:
           context: .
