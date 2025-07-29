@@ -22,7 +22,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 
 # --- Stage 2: Final Production Image ---
-# Start from a clean, slim base image again.
+# Start from a clean, slim base image again
 FROM python:3.11-slim-bookworm
 
 # Set the same environment variables

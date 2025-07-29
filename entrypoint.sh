@@ -3,7 +3,7 @@
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
-# Redirect all output (stdout and stderr) to a log file
+# Redirect all output (stdout and stderr) to a log fil
 # This is the crucial debugging step.
 exec > /home/LogFiles/entrypoint_log.txt 2>&1
 
