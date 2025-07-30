@@ -52,6 +52,10 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 RUN python manage.py collectstatic --noinput
 
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
+
 # Expose the port
 EXPOSE 8000
 
