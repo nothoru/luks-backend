@@ -50,10 +50,7 @@ COPY . .
 # Set the PATH to use the Python from our virtual environment
 ENV PATH="/opt/venv/bin:$PATH"
 
-
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-ENTRYPOINT ["/entrypoint.sh"]
+RUN python manage.py collectstatic --noinput
 
 # Expose the port
 EXPOSE 8000
