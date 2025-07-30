@@ -50,12 +50,6 @@ COPY . .
 # Set the PATH to use the Python from our virtual environment
 ENV PATH="/opt/venv/bin:$PATH"
 
-
-
-COPY entrypoint.sh /entrypoint.sh
-ENTRYPOINT ["/entrypoint.sh"]
-
-
 # Expose the port
 EXPOSE 8000
 
