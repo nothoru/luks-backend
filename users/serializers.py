@@ -1,5 +1,5 @@
 # backend/users/serializers.py
-
+import os
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.tokens import default_token_generator
@@ -70,7 +70,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         token = default_token_generator.make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
 
-        frontend_url = "http://localhost:5173" 
+        frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
         activation_link = f"{frontend_url}/activate/{uid}/{token}/"
 
         context = {
@@ -115,7 +115,7 @@ class StaffUserSerializer(serializers.ModelSerializer):
         token = default_token_generator.make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
 
-        frontend_url = "http://localhost:5173"
+        frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
         activation_link = f"{frontend_url}/activate/{uid}/{token}/" 
 
         context = {
