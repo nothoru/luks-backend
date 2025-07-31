@@ -194,14 +194,16 @@ AUTH_USER_MODEL = 'users.User'
 if 'AZURE_STORAGE_CONNECTION_STRING' in os.environ:
     # --- PRODUCTION SETTINGS (Azure Blob Storage) ---
     AZURE_ACCOUNT_NAME = os.getenv('AZURE_ACCOUNT_NAME')
-    AZURE_CONTAINER = "media" 
+    # Read the container name from an environment variable
+    AZURE_CONTAINER = os.getenv('AZURE_CONTAINER') 
+    # Add this line to prevent issues with file overwrites
+    AZURE_OVERWRITE_FILES = True 
     AZURE_URL_EXPIRATION_SECS = None
     
     DEFAULT_FILE_STORAGE = 'storages.backends.azure_storage.AzureStorage'
     AZURE_STORAGE_CONNECTION_STRING = os.getenv('AZURE_STORAGE_CONNECTION_STRING')
     
     MEDIA_URL = f'https://{AZURE_ACCOUNT_NAME}.blob.core.windows.net/{AZURE_CONTAINER}/'
-
 else:
     # --- DEVELOPMENT SETTINGS (Local filesystem) ---
     MEDIA_URL = '/media/'
