@@ -3,14 +3,6 @@
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
-# Redirect all output to a new log file to be sure we're not seeing old data
-
-echo "--- Entrypoint script started at $(date) ---"
-
-# --- THIS IS OUR CRITICAL DEBUGGING LINE ---
-echo "Value of AZURE_STORAGE_CONNECTION_STRING is: [${AZURE_STORAGE_CONNECTION_STRING}]"
-# --- END OF DEBUGGING LINE ---
-
 echo "--- Entrypoint: Applying database migrations ---"
 python manage.py migrate --noinput
 
