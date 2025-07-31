@@ -1,6 +1,5 @@
 #!/bin/sh
 set -e
-exec > /home/LogFiles/entrypoint_log.txt 2>&1
 
 echo "--- Entrypoint script started at $(date) ---"
 
@@ -13,6 +12,12 @@ else
 fi
 echo "------------------------------------------------"
 
-echo "--- Running database migrations ---"
+echo "--- Entrypoint: Applying database migrations ---"
 python manage.py migrate --noinput
-# ... rest of the script ...
+
+echo "--- Entrypoint: Collecting static files ---"
+python manage.py collectstatic --noinput
+
+echo "--- Entrypoint: Starting Gunicorn server ---"
+# The "$@" CMD from the Dockerfile will be passed here
+exec "$@"
