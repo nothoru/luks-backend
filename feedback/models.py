@@ -18,3 +18,9 @@ class Feedback(models.Model):
 
     class Meta:
         ordering = ['-created_at'] 
+
+class TestModel(models.Model):
+    name = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.name
