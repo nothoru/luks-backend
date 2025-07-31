@@ -1,16 +1,15 @@
 #!/bin/sh
+
+# Exit immediately if a command exits with a non-zero status.
 set -e
+
+# Redirect all output to a new log file to be sure we're not seeing old data
 
 echo "--- Entrypoint script started at $(date) ---"
 
-# --- THIS IS THE NEW DEBUGGING LINE ---
-echo "--- Checking for Azure Storage Connection String ---"
-if [ -n "$AZURE_STORAGE_CONNECTION_STRING" ]; then
-  echo "SUCCESS: AZURE_STORAGE_CONNECTION_STRING variable was found."
-else
-  echo "FAILURE: AZURE_STORAGE_CONNECTION_STRING variable IS NOT SET."
-fi
-echo "------------------------------------------------"
+# --- THIS IS OUR CRITICAL DEBUGGING LINE ---
+echo "Value of AZURE_STORAGE_CONNECTION_STRING is: [${AZURE_STORAGE_CONNECTION_STRING}]"
+# --- END OF DEBUGGING LINE ---
 
 echo "--- Entrypoint: Applying database migrations ---"
 python manage.py migrate --noinput
