@@ -21,9 +21,6 @@ class MenuItemSerializer(serializers.ModelSerializer):
     
     category_id = serializers.IntegerField(write_only=True)
 
-    image = serializers.SerializerMethodField()
-
-
     class Meta:
         model = MenuItems
         fields = [
@@ -33,9 +30,4 @@ class MenuItemSerializer(serializers.ModelSerializer):
             'is_fully_out_of_stock' 
         ]
         
-    def get_image(self, obj):
-        request = self.context.get('request')
-        if obj.image and hasattr(obj.image, 'url'):
-            # This will correctly build the full URL, e.g., https://.../media/image.jpg
-            return request.build_absolute_uri(obj.image.url)
-        return None # Return null if there is no image     
+    
