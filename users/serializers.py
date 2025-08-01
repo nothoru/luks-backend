@@ -115,7 +115,7 @@ class StaffUserSerializer(serializers.ModelSerializer):
         token = default_token_generator.make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
 
-        frontend_url = "http://localhost:5173"
+        frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
         activation_link = f"{frontend_url}/activate/{uid}/{token}/" 
 
         context = {
