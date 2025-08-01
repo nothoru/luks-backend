@@ -199,11 +199,7 @@ if 'AZURE_STORAGE_CONNECTION_STRING' in os.environ:
     # Add this line to prevent issues with file overwrites
     AZURE_URL_EXPIRATION_SECS = None
     
-    DEFAULT_FILE_STORAGE = 'storages.backends.azure_storage.AzureStorage'
-    AZURE_BLOB_PUBLIC_CONTAINER = True
-    AZURE_BLOB_OVERWRITE_FILES = True
-    # This helps with serving files correctly, especially non-ASCII filenames
-    AZURE_BLOB_DEFAULT_CONTENT_TYPE = 'application/octet-stream'    
+    DEFAULT_FILE_STORAGE = 'storages.backends.azure_storage.AzureStorage'   
     MEDIA_URL = f'https://{AZURE_ACCOUNT_NAME}.blob.core.windows.net/{AZURE_CONTAINER}/'
 else:
     # --- DEVELOPMENT SETTINGS (Local filesystem) ---
