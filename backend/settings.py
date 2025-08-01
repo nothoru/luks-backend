@@ -157,6 +157,12 @@ USE_I18N = True
 USE_TZ = True
 
 
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/5.1/howto/static-files/
+
+STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
@@ -185,27 +191,37 @@ SIMPLE_JWT = {
 
 AUTH_USER_MODEL = 'users.User'
 
-STATIC_URL = 'static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
+if 'AZURE_STORAGE_CONNECTION_STRING' in os.environ:
     # --- PRODUCTION SETTINGS (Azure Blob Storage) ---
-AZURE_ACCOUNT_NAME = os.getenv('AZURE_ACCOUNT_NAME')
-AZURE_CONTAINER = os.getenv('AZURE_CONTAINER', 'media') # Default to 'media'
-AZURE_ACCOUNT_KEY = os.getenv('AZURE_ACCOUNT_KEY')
+    AZURE_ACCOUNT_NAME = os.getenv('AZURE_ACCOUNT_NAME')
+    AZURE_CONTAINER = os.getenv('AZURE_CONTAINER', 'media') # Default to 'media'
+    AZURE_ACCOUNT_KEY = os.getenv('AZURE_ACCOUNT_KEY')
 
-STORAGES = {
+    STORAGES = {
         "default": {
             "BACKEND": "storages.backends.azure_storage.AzureStorage",
-            "OPTIONS": {
-                'timeout': 20,
-                'expiration_secs': 500
-            }
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
         },
     }
     
-MEDIA_URL = f'https://{AZURE_ACCOUNT_NAME}.blob.core.windows.net/{AZURE_CONTAINER}/'
+    MEDIA_URL = f'https://{AZURE_ACCOUNT_NAME}.blob.core.windows.net/{AZURE_CONTAINER}/'
 
+else:
+    # --- DEVELOPMENT SETTINGS (Local filesystem) ---
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+            "OPTIONS": {}
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = os.getenv('EMAIL_HOST')
