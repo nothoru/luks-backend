@@ -24,7 +24,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.ACR_LOGIN_SERVER }}/deployment-backend:latest
+          tags: ${{ secrets.ACR_LOGIN_SERVER }}/deployment-backend:latest:${{ github.sha }}
 
       - name: "Log in to Azure"
         uses: azure/login@v2 # Use latest Azure login action
@@ -35,4 +35,4 @@ jobs:
         uses: azure/webapps-deploy@v3 # Use latest deploy action
         with:
           app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
-          images: "${{ secrets.ACR_LOGIN_SERVER }}/deployment-backend:latest"
+          images: "${{ secrets.ACR_LOGIN_SERVER }}/deployment-backend:${{ github.sha }}'
