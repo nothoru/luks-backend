@@ -186,7 +186,8 @@ SIMPLE_JWT = {
 AUTH_USER_MODEL = 'users.User'
 
 STATIC_URL = 'static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') 
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
     # --- PRODUCTION SETTINGS (Azure Blob Storage) ---
 AZURE_ACCOUNT_NAME = os.getenv('AZURE_ACCOUNT_NAME')
@@ -200,9 +201,6 @@ STORAGES = {
                 'timeout': 20,
                 'expiration_secs': 500
             }
-        },
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
         },
     }
     
