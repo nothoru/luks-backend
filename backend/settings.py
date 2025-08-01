@@ -200,7 +200,7 @@ if 'AZURE_STORAGE_CONNECTION_STRING' in os.environ:
     # Add this line to prevent issues with file overwrites
     AZURE_URL_EXPIRATION_SECS = None
     
-    DEFAULT_FILE_STORAGE = 'storages.backends.azure_storage.AzureStorage'   
+    DEFAULT_FILE_STORAGE = 'backend.custom_storages.AzureMediaStorage'
     MEDIA_URL = f'https://{AZURE_ACCOUNT_NAME}.blob.core.windows.net/{AZURE_CONTAINER}/'
 else:
     # --- DEVELOPMENT SETTINGS (Local filesystem) ---
