@@ -197,12 +197,13 @@ if 'AZURE_STORAGE_CONNECTION_STRING' in os.environ:
     # Read the container name from an environment variable
     AZURE_CONTAINER = os.getenv('AZURE_CONTAINER') 
     # Add this line to prevent issues with file overwrites
-    AZURE_OVERWRITE_FILES = True 
     AZURE_URL_EXPIRATION_SECS = None
     
     DEFAULT_FILE_STORAGE = 'storages.backends.azure_storage.AzureStorage'
-    AZURE_STORAGE_CONNECTION_STRING = os.getenv('AZURE_STORAGE_CONNECTION_STRING')
-    
+    AZURE_BLOB_PUBLIC_CONTAINER = True
+    AZURE_BLOB_OVERWRITE_FILES = True
+    # This helps with serving files correctly, especially non-ASCII filenames
+    AZURE_BLOB_DEFAULT_CONTENT_TYPE = 'application/octet-stream'    
     MEDIA_URL = f'https://{AZURE_ACCOUNT_NAME}.blob.core.windows.net/{AZURE_CONTAINER}/'
 else:
     # --- DEVELOPMENT SETTINGS (Local filesystem) ---

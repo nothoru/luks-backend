@@ -1,6 +1,8 @@
 # menu/serializers.py
 from rest_framework import serializers
 from .models import MenuItems, Variations, Categories
+from django.db import transaction
+import json
 
 class VariationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -30,4 +32,3 @@ class MenuItemSerializer(serializers.ModelSerializer):
             'is_fully_out_of_stock' 
         ]
         
-    
