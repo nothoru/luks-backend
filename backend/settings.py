@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'feedback',
     'analytics',
     'facial_auth',
+    'storages',
 ]
 
 MIDDLEWARE = [
