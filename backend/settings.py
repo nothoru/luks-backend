@@ -191,7 +191,7 @@ SIMPLE_JWT = {
 
 AUTH_USER_MODEL = 'users.User'
 
-if 'WEBSITE_HOSTNAME' in os.environ:
+if 'AZURE_STORAGE_CONNECTION_STRING' in os.environ:
     # --- PRODUCTION SETTINGS (Azure Blob Storage) ---
     AZURE_ACCOUNT_NAME = os.getenv('AZURE_ACCOUNT_NAME')
     # Read the container name from an environment variable
