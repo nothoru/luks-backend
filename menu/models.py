@@ -10,7 +10,7 @@ class Categories(models.Model):
 class MenuItems(models.Model):
     category = models.ForeignKey(Categories, on_delete=models.CASCADE, related_name="menu_items")
     name = models.CharField(max_length=150)
-    image = models.ImageField(upload_to='menu_images/', blank=True, null=True)
+    image = models.ImageField(blank=True, null=True)
     is_available = models.BooleanField(default=True)
 
     @property
