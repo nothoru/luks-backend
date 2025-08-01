@@ -188,12 +188,12 @@ AUTH_USER_MODEL = 'users.User'
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') 
 
-if 'AZURE_STORAGE_CONNECTION_STRING' in os.environ:
     # --- PRODUCTION SETTINGS (Azure Blob Storage) ---
-    AZURE_ACCOUNT_NAME = os.getenv('AZURE_ACCOUNT_NAME')
-    AZURE_CONTAINER = os.getenv('AZURE_CONTAINER', 'media') # Default to 'media'
+AZURE_ACCOUNT_NAME = os.getenv('AZURE_ACCOUNT_NAME')
+AZURE_CONTAINER = os.getenv('AZURE_CONTAINER', 'media') # Default to 'media'
+AZURE_ACCOUNT_KEY = os.getenv('AZURE_ACCOUNT_KEY')
 
-    STORAGES = {
+STORAGES = {
         "default": {
             "BACKEND": "storages.backends.azure_storage.AzureStorage",
             "OPTIONS": {
@@ -206,11 +206,8 @@ if 'AZURE_STORAGE_CONNECTION_STRING' in os.environ:
         },
     }
     
-    MEDIA_URL = f'https://{AZURE_ACCOUNT_NAME}.blob.core.windows.net/{AZURE_CONTAINER}/'
-else:
-    # --- DEVELOPMENT SETTINGS (Local filesystem) ---
-    MEDIA_URL = '/media/'
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = f'https://{AZURE_ACCOUNT_NAME}.blob.core.windows.net/{AZURE_CONTAINER}/'
+
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = os.getenv('EMAIL_HOST')
