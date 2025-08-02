@@ -91,7 +91,7 @@ class AdminOrderListView(generics.ListAPIView):
 
         if status_filter == 'completed':
             today = localtime(timezone.now()).date()
-            queryset = queryset.filter(updated_at__date=today) 
+            queryset = queryset.filter(processed_at__date=today) 
 
         search_query = self.request.query_params.get('search', None)
         if search_query:
