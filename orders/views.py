@@ -117,6 +117,29 @@ class AdminOrderDetailView(generics.UpdateAPIView):
         order = self.get_object()
         new_status = request.data.get('status')
 
+        table_number = request.data.get('table_number', order.table_number)
+
+        # Added table number limitation and error
+        if table_number:
+            if not str(table_number).isdigit():
+                 return Response({'error': 'Table number must contain only digits.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            if len(str(table_number)) > 10:
+                return Response({'error': "Table number is too long. Maximum is 10 characters."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            if new_status in ['processing', 'ready_to_serve']:
+                active_statuses = ['processing', 'ready_to_serve']
+                is_occupied = Orders.objects.filter(
+                    table_number=table_number, 
+                    status__in=active_statuses
+                ).exclude(id=order.id).exists()
+
+                if is_occupied:
+                    return Response(
+                        {'error': f'Table {table_number} is currently occupied by another active order.'}, 
+                        status=status.HTTP_409_CONFLICT
+                    )
+
         if order.status == 'pending' and new_status == 'processing':
             for item in order.order_items.all():
                 variation = item.variation
@@ -151,6 +174,23 @@ class POSOrderCreateView(APIView):
         amount_paid_str = request.data.get('amount_paid')
         change_given_str = request.data.get('change_given')
 
+        if dining_method == 'dine-in':
+            if not table_number:
+                 return Response({'error': 'Table number is required for dine-in.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            if not str(table_number).isdigit():
+                return Response({'error': 'Table number must contain only digits.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            if len(str(table_number)) > 10:
+                 return Response({'error': 'Table number is too long. Max 10 chars.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            active_statuses = ['processing', 'ready_to_serve']
+            if Orders.objects.filter(table_number=table_number, status__in=active_statuses).exists():
+                return Response(
+                    {'error': f'Table {table_number} is currently occupied by another active order.'}, 
+                    status=status.HTTP_409_CONFLICT
+                )
+            
         if not cart_items:
             return Response({'error': 'Order must contain items.'}, status=status.HTTP_400_BAD_REQUEST)
         if not dining_method:
