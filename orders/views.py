@@ -145,11 +145,36 @@ class POSOrderCreateView(APIView):
 
     @transaction.atomic
     def post(self, request, *args, **kwargs): 
+        # 1. Get Data
         cart_items = request.data.get('items', [])
         dining_method = request.data.get('dining_method')
         table_number = request.data.get('table_number')
         amount_paid_str = request.data.get('amount_paid')
         change_given_str = request.data.get('change_given')
+
+        # --- START OF NEW VALIDATION LOGIC ---
+        # We check this FIRST to prevent the "Value too long" database crash
+        if dining_method == 'dine-in':
+            # Check 1: Is it empty?
+            if not table_number:
+                 return Response({'error': 'Table number is required for dine-in.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Check 2: Is it numbers only?
+            if not str(table_number).isdigit():
+                 return Response({'error': 'Table number must contain only digits.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check 3: Is it too long? (This fixes your crash)
+            if len(str(table_number)) > 10:
+                 return Response({'error': 'Table number is too long. Max 10 chars.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check 4: Is the table already taken?
+            active_statuses = ['processing', 'ready_to_serve']
+            if Orders.objects.filter(table_number=table_number, status__in=active_statuses).exists():
+                return Response(
+                    {'error': f'Table {table_number} is currently occupied by another active order.'}, 
+                    status=status.HTTP_409_CONFLICT
+                )
+        # --- END OF NEW VALIDATION LOGIC ---
 
         if not cart_items:
             return Response({'error': 'Order must contain items.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -165,6 +190,7 @@ class POSOrderCreateView(APIView):
         total_amount = 0
         items_to_process = []
         
+        # Calculate totals and check stock
         for item_data in cart_items:
             try:
                 variation = Variations.objects.get(id=item_data['variation_id'])
@@ -183,6 +209,7 @@ class POSOrderCreateView(APIView):
             except Variations.DoesNotExist:
                 return Response({'error': 'Invalid item ID in order.'}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Create the Order (This is safe now because we validated table_number above)
         order = Orders.objects.create(
             user=None,
             processed_by_staff=request.user,
@@ -197,6 +224,7 @@ class POSOrderCreateView(APIView):
             change_given=change_given
         )
 
+        # Create Order Items and Update Stock
         order_item_objects = []
         for item_info in items_to_process:
             order_item_objects.append(
