@@ -18,6 +18,9 @@ from rest_framework.views import APIView
 from users.permissions import IsStaffUser 
 from backend.pagination import StandardResultsSetPagination 
 
+from rest_framework import filters 
+
+
 class OrderCreateView(generics.CreateAPIView):
     serializer_class = OrderCreateSerializer
     permission_classes = [IsAuthenticated] 
@@ -303,6 +306,11 @@ class SalesReportView(generics.ListAPIView):
     serializer_class = SalesReportSerializer
     permission_classes = [IsAuthenticated, IsStaffUser]
     pagination_class = StandardResultsSetPagination 
+
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['order_number', 'user__first_name', 'user__last_name', 'processed_by_staff__first_name']
+    ordering_fields = ['processed_at', 'total_amount']
+    ordering = ['-processed_at'] # Default sort
 
     def get_queryset(self):
         queryset = Orders.objects.filter(status='completed').select_related(

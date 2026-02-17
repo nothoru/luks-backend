@@ -10,6 +10,7 @@ import json
 from backend.pagination import StandardResultsSetPagination
 from django.db.models import Q, Exists, OuterRef
 from orders.models import OrderItems 
+from rest_framework import filters 
 
 class MenuItemListView(generics.ListAPIView):
     queryset = MenuItems.objects.filter(is_available=True).prefetch_related('variations')
@@ -29,8 +30,13 @@ class AdminMenuItemListView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated, IsStaffUser]
     pagination_class = StandardResultsSetPagination
 
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'category__name']
+    ordering_fields = ['name', 'category__name']
+    ordering = ['name']
+
     def get_queryset(self):
-        queryset = MenuItems.objects.select_related('category').prefetch_related('variations').order_by('category__name', 'name')
+        queryset = MenuItems.objects.select_related('category').prefetch_related('variations')
         
         status_filter = self.request.query_params.get('status', 'active')
 

@@ -24,6 +24,7 @@ from .serializers import (
 from .permissions import IsAdminUser
 from .utils import send_email 
 from backend.pagination import StandardResultsSetPagination
+from rest_framework import filters
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
@@ -137,6 +138,11 @@ class StaffUserListView(generics.ListCreateAPIView):
     serializer_class = StaffUserSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
     pagination_class = StandardResultsSetPagination
+
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['first_name', 'last_name', 'email']
+    ordering_fields = ['first_name', 'date_joined']
+    ordering = ['first_name']
 
     def get_queryset(self):
         return User.objects.filter(role='staff').order_by('first_name')
