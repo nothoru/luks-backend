@@ -1,13 +1,14 @@
 # feedback/views.py
 from rest_framework import generics
+from rest_framework.views import APIView 
+from rest_framework.response import Response 
 from rest_framework.permissions import IsAuthenticated
 from .models import Feedback
 from .serializers import FeedbackCreateSerializer, FeedbackListSerializer
 from users.permissions import IsAdminUser 
-
 from .utils import analyze_sentiment
-
 from backend.pagination import StandardResultsSetPagination
+from django.db.models import Count 
 
 
 
@@ -33,3 +34,22 @@ class AdminFeedbackListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated, IsAdminUser] 
 
     pagination_class = StandardResultsSetPagination
+
+class FeedbackStatsView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def get(self, request):
+        stats = Feedback.objects.values('sentiment_label').annotate(count=Count('id'))
+        
+        data = {item['sentiment_label']: item['count'] for item in stats}
+        
+        total = Feedback.objects.count()
+        
+        response_data = {
+            'total': total,
+            'positive': data.get('positive', 0),
+            'neutral': data.get('neutral', 0),
+            'negative': data.get('negative', 0),
+        }
+        
+        return Response(response_data)
