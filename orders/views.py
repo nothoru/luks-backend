@@ -118,27 +118,31 @@ class AdminOrderDetailView(generics.UpdateAPIView):
         new_status = request.data.get('status')
 
         table_number = request.data.get('table_number', order.table_number)
+        amount_paid_val = request.data.get('amount_paid')
 
-        # Added table number limitation and error
-        if table_number:
-            if not str(table_number).isdigit():
-                 return Response({'error': 'Table number must contain only digits.'}, status=status.HTTP_400_BAD_REQUEST)
+        if table_number and len(str(table_number)) > 10:
+             return Response({'error': 'Table number is too long. Max 10 characters.'}, status=status.HTTP_400_BAD_REQUEST)
 
-            if len(str(table_number)) > 10:
-                return Response({'error': "Table number is too long. Maximum is 10 characters."}, status=status.HTTP_400_BAD_REQUEST)
-            
-            if new_status in ['processing', 'ready_to_serve']:
-                active_statuses = ['processing', 'ready_to_serve']
-                is_occupied = Orders.objects.filter(
-                    table_number=table_number, 
-                    status__in=active_statuses
-                ).exclude(id=order.id).exists()
+        if table_number and new_status in ['processing', 'ready_to_serve']:
+            active_statuses = ['processing', 'ready_to_serve']
+            is_occupied = Orders.objects.filter(
+                table_number=table_number, 
+                status__in=active_statuses
+            ).exclude(id=order.id).exists() 
 
-                if is_occupied:
-                    return Response(
-                        {'error': f'Table {table_number} is currently occupied by another active order.'}, 
-                        status=status.HTTP_409_CONFLICT
-                    )
+            if is_occupied:
+                return Response(
+                    {'error': f'Table {table_number} is currently occupied by another active order.'}, 
+                    status=status.HTTP_409_CONFLICT
+                )
+
+        if amount_paid_val:
+            try:
+                amount = float(amount_paid_val)
+                if amount > 99999999.99: 
+                    return Response({'error': 'Amount paid is too large'}, status=status.HTTP_400_BAD_REQUEST)
+            except ValueError:
+                 return Response({'error': 'Invalid amount format.'}, status=status.HTTP_400_BAD_REQUEST)
 
         if order.status == 'pending' and new_status == 'processing':
             for item in order.order_items.all():
@@ -152,7 +156,7 @@ class AdminOrderDetailView(generics.UpdateAPIView):
                 variation.save()
 
             order.processed_at = timezone.now()
-            order.table_number = request.data.get('table_number', order.table_number)
+            order.table_number = table_number 
             order.amount_paid = request.data.get('amount_paid', order.amount_paid)
             order.change_given = request.data.get('change_given', order.change_given)
             order.payment_status = 'paid'
@@ -168,25 +172,28 @@ class POSOrderCreateView(APIView):
 
     @transaction.atomic
     def post(self, request, *args, **kwargs): 
-        # 1. Get Data
         cart_items = request.data.get('items', [])
         dining_method = request.data.get('dining_method')
         table_number = request.data.get('table_number')
         amount_paid_str = request.data.get('amount_paid')
         change_given_str = request.data.get('change_given')
 
-        # --- START OF NEW VALIDATION LOGIC ---
-        # We check this FIRST to prevent the "Value too long" database crash
+        
+        if amount_paid_str:
+            try:
+                if float(amount_paid_str) > 99999999.99:
+                    return Response({'error': 'Amount paid is too large. Max allowed is 99,999,999.99'}, status=status.HTTP_400_BAD_REQUEST)
+            except ValueError:
+                return Response({'error': 'Invalid amount format.'}, status=status.HTTP_400_BAD_REQUEST)
+
         if dining_method == 'dine-in':
-            # Check 1: Is it empty?
             if not table_number:
                  return Response({'error': 'Table number is required for dine-in.'}, status=status.HTTP_400_BAD_REQUEST)
             
-            # Check 2: Is it numbers only?
             if not str(table_number).isdigit():
                  return Response({'error': 'Table number must contain only digits.'}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Check 3: Is it too long? (This fixes your crash)
+            # Check 3: Is it too long?
             if len(str(table_number)) > 10:
                  return Response({'error': 'Table number is too long. Max 10 chars.'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -197,7 +204,6 @@ class POSOrderCreateView(APIView):
                     {'error': f'Table {table_number} is currently occupied by another active order.'}, 
                     status=status.HTTP_409_CONFLICT
                 )
-        # --- END OF NEW VALIDATION LOGIC ---
 
         if not cart_items:
             return Response({'error': 'Order must contain items.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -232,7 +238,7 @@ class POSOrderCreateView(APIView):
             except Variations.DoesNotExist:
                 return Response({'error': 'Invalid item ID in order.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Create the Order (This is safe now because we validated table_number above)
+        # Create the Order
         order = Orders.objects.create(
             user=None,
             processed_by_staff=request.user,
@@ -316,14 +322,6 @@ class SalesReportView(generics.ListAPIView):
             
             next_day_date = end_date + timedelta(days=1)
             end_datetime_exclusive = timezone.make_aware(datetime.combine(next_day_date, time.min), current_tz)
-
-            #DEBUGGING FOR NOW DUE TO TIME ISSUES
-            print(f"Start Date from Frontend: {start_date}")
-            print(f"End Date from Frontend: {end_date}")
-            print(f"Django TIME_ZONE: {current_tz}")
-            print(f"Query Start Datetime (Local): {start_datetime}")
-            print(f"Query End Datetime (Local): {end_datetime_exclusive}")
-            print("----------------------")
             
             queryset = queryset.filter(
                 processed_at__gte=start_datetime, 
